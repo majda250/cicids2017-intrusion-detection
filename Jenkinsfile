@@ -1,82 +1,46 @@
 pipeline {
-
     agent any
-
-    environment {
-        IMAGE_NAME = "cicids2017-api"
-        CONTAINER_NAME = "cicids2017-container"
-    }
 
     stages {
 
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                echo 'Récupération du projet depuis GitHub...'
-                checkout scm
+                git branch: 'main',
+                url: 'https://github.com/majda250/cicids2017-intrusion-detection.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'pip install -r requirements.txt'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Construction de l’image Docker...'
-                sh 'docker build -t ${IMAGE_NAME}:latest .'
+                sh 'docker build -t intrusion-api .'
             }
         }
 
-        stage('Verify Image') {
+        stage('Run Container Test') {
             steps {
-                echo 'Vérification de l’image...'
-                sh 'docker images'
-            }
-        }
-
-        stage('Run Container') {
-            steps {
-                echo 'Lancement du conteneur...'
                 sh '''
-                docker rm -f ${CONTAINER_NAME} || true
-                docker run -d \
-                    --name ${CONTAINER_NAME} \
-                    -p 8000:8000 \
-                    ${IMAGE_NAME}:latest
+                docker run -d --name api-test -p 8000:8000 intrusion-api
+                sleep 15
+                curl http://localhost:8000/
+                docker stop api-test
+                docker rm api-test
                 '''
             }
         }
 
-        stage('API Health Check') {
+        stage('Deploy to Render') {
             steps {
-                echo 'Test de l’API...'
                 sh '''
-                sleep 10
-                curl http://host.docker.internal:8000/
+                curl -X POST https://api.render.com/deploy/srv-d9jqeljtqb8s73at9srg?key=Fchzc_0VrA8
                 '''
             }
         }
 
-        stage('Stop Container') {
-            steps {
-                echo 'Arrêt du conteneur...'
-                sh '''
-                docker stop ${CONTAINER_NAME}
-                docker rm ${CONTAINER_NAME}
-                '''
-            }
-        }
-
-    }
-
-    post {
-
-        success {
-            echo 'Pipeline exécutée avec succès.'
-        }
-
-        failure {
-            echo 'La pipeline a échoué.'
-        }
-
-        always {
-            sh 'docker rm -f ${CONTAINER_NAME} || true'
-        }
     }
 }
