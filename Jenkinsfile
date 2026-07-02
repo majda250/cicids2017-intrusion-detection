@@ -21,9 +21,9 @@ pipeline {
                 # attendre le démarrage
                 sleep 15
 
-                sh '''
+                
                 docker logs api-test
-                '''
+                
 
                 # tester l'API
                 STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost:8001/)
