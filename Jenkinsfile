@@ -3,15 +3,6 @@ pipeline {
 
     stages {
 
-        stage('Clone Repository') {
-            steps {
-                git branch: 'main',
-                url: 'https://github.com/majda250/cicids2017-intrusion-detection.git'
-            }
-        }
-
-        
-
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t intrusion-api .'
