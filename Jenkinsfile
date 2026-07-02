@@ -21,14 +21,28 @@ pipeline {
         stage('Run Container Test') {
             steps {
                 sh '''
-                docker run -d --name api-test -p 8000:8000 intrusion-api
+                # supprimer l'ancien conteneur s'il existe
+                docker rm -f api-test || true
+
+                # lancer le nouveau conteneur
+                docker run -d --name api-test -p 8001:8000 intrusion-api
+
+                # attendre le démarrage
                 sleep 15
-                curl http://localhost:8000/
-                docker stop api-test
-                docker rm api-test
+
+                # tester l'API
+                STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost:8001/)
+
+                if [ "$STATUS" != "200" ]; then
+                    docker logs api-test
+                    docker rm -f api-test
+                    exit 1
+                fi
+
+                docker rm -f api-test
                 '''
-            }
-        }
+    }
+}
 
         stage('Deploy to Render') {
             steps {
