@@ -16,7 +16,7 @@ pipeline {
                 docker rm -f api-test || true
 
                 # lancer le nouveau conteneur
-                docker run -d --name api-test -p 8001:8000 intrusion-api
+                docker run -d --name api-test -p 8001:8001 intrusion-api
 
                 # attendre le démarrage
                 sleep 15
