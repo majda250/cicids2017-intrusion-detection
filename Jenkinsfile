@@ -16,10 +16,14 @@ pipeline {
                 docker rm -f api-test || true
 
                 # lancer le nouveau conteneur
-                docker run -d --name api-test -p 8001:8000 intrusion-api
+                docker run -d --name api-test -p 8000:8000 intrusion-api
 
                 # attendre le démarrage
                 sleep 15
+
+                sh '''
+                docker logs api-test
+                '''
 
                 # tester l'API
                 STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost:8001/)
